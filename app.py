@@ -1,5 +1,7 @@
-# Newcastle Disease Virus F Gene Genotyper
-# Streamlit Web Application
+"""
+Newcastle Disease Virus F Gene Genotyper
+Streamlit Web Application
+"""
 
 from datetime import datetime
 import streamlit as st
