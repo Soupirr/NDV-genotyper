@@ -883,8 +883,11 @@ with tab_tree:
 # ============================================================================
 
 with help_tab:
-    st.header("Help")
-    st.markdown("Overview of the tool, the functionnality, and stats.")
+    st.divider()
+    st.markdown(
+        "##### **If you encounter any issues feel free to report them [here](https://github.com/Soupirr/NDV-genotyper/issues).**"
+    )
+    st.divider()
 
     info_tab, stat_tab = st.tabs(["Information", "Statistics"])
 
@@ -908,8 +911,12 @@ with help_tab:
 
         # Normalisation des noms d'hôtes — chargé depuis data/hosts/host_normalize.csv
         # Pour ajouter un hôte : rajouter une ligne  raw_host,normalized_host  dans le CSV
-        _df_host_map = pd.read_csv(os.path.join(DATA_FOLDER, "hosts", "host_normalize.csv"))
-        HOST_NORMALIZE = dict(zip(_df_host_map["raw_host"].str.lower(), _df_host_map["normalized_host"]))
+        _df_host_map = pd.read_csv(
+            os.path.join(DATA_FOLDER, "hosts", "host_normalize.csv")
+        )
+        HOST_NORMALIZE = dict(
+            zip(_df_host_map["raw_host"].str.lower(), _df_host_map["normalized_host"])
+        )
 
         # Set of known country names (lowercased) to detect when host field is missing
         KNOWN_COUNTRIES = set(df_world["country"].str.lower()) | {
