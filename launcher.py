@@ -4,18 +4,28 @@ NDV Genotyper - Entry point for the packaged .exe
 
 import sys
 import os
+import ctypes
 import multiprocessing
 import time
 import urllib.request
-import ctypes
-os.environ['PYWEBVIEW_GUI'] = 'edgechromium'
-import webview
 
 
 def get_base_path():
     if getattr(sys, "frozen", False):
         return sys._MEIPASS
     return os.path.dirname(os.path.abspath(__file__))
+
+
+def unblock_dlls():
+    """Remove Mark of the Web (Zone.Identifier) from bundled DLLs.
+    Windows blocks .NET assemblies downloaded from the internet without this."""
+    if not getattr(sys, "frozen", False):
+        return
+    for dirpath, _, filenames in os.walk(sys._MEIPASS):
+        for filename in filenames:
+            if filename.endswith((".dll", ".pyd")):
+                filepath = os.path.join(dirpath, filename)
+                ctypes.windll.kernel32.DeleteFileW(f"{filepath}:Zone.Identifier")
 
 
 def streamlit_process(app_path, base_path):
@@ -44,13 +54,17 @@ def wait_for_streamlit(port=8501, timeout=60):
 
 
 if __name__ == "__main__":
-    multiprocessing.freeze_support()  # Required for PyInstaller + multiprocessing
+    multiprocessing.freeze_support()
+
+    # Unblock DLLs before importing webview (required after downloading from internet)
+    unblock_dlls()
+
+    import webview  # Late import — must happen after unblock_dlls()
 
     base_path = get_base_path()
     os.chdir(base_path)
     app_path = os.path.join(base_path, "app.py")
 
-    # Streamlit runs in a separate process (needs its own main thread for signal handlers)
     p = multiprocessing.Process(target=streamlit_process, args=(app_path, base_path))
     p.start()
 
@@ -61,20 +75,18 @@ if __name__ == "__main__":
         hwnd = ctypes.windll.user32.FindWindowW(None, "NDV Genotyper")
         if hwnd:
             hicon = ctypes.windll.user32.LoadImageW(
-                None, icon_path, 1, 0, 0, 0x10  # IMAGE_ICON, LR_LOADFROMFILE
+                None, icon_path, 1, 0, 0, 0x10
             )
             if hicon:
-                ctypes.windll.user32.SendMessageW(hwnd, 0x80, 0, hicon)  # ICON_SMALL
-                ctypes.windll.user32.SendMessageW(hwnd, 0x80, 1, hicon)  # ICON_BIG
+                ctypes.windll.user32.SendMessageW(hwnd, 0x80, 0, hicon)
+                ctypes.windll.user32.SendMessageW(hwnd, 0x80, 1, hicon)
 
-    # pywebview runs in the main thread of the launcher (required on Windows)
     window = webview.create_window(
         "NDV Genotyper", "http://127.0.0.1:8501", maximized=True
     )
     window.events.loaded += set_icon
     webview.start(gui='edgechromium')
 
-    # Window closed — kill Streamlit and exit cleanly
     p.terminate()
     p.join(timeout=3)
     os._exit(0)
