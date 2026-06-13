@@ -8,6 +8,7 @@ import multiprocessing
 import time
 import urllib.request
 import ctypes
+os.environ['PYWEBVIEW_GUI'] = 'edgechromium'
 import webview
 
 
