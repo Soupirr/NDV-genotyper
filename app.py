@@ -910,13 +910,21 @@ with help_tab:
     )
     st.divider()
 
-    info_tab, stat_tab = st.tabs(["Informations", "Statistics"])
+    info_tab, path_tab, stat_tab = st.tabs(
+        ["Informations", "Pathogénicité", "Statistics"]
+    )
 
     with info_tab:
         with open("QUICK_START.md", "r", encoding="utf-8") as f:
             informations = f.read()
 
         st.markdown(informations)
+
+    with path_tab:
+        with open("PATHOGENICITY_CRITERIA.md", "r", encoding="utf-8") as p:
+            pathogénicité = p.read()
+
+        st.markdown(pathogénicité)
 
     with stat_tab:
         st.header("Database Statistics")

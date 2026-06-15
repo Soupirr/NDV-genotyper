@@ -33,9 +33,10 @@ a = Analysis(
         plotly_datas +
         [
             # Application source (Streamlit reads app.py as a text file at runtime)
-            ('app.py',         '.'),
-            ('analyzer.py',    '.'),
-            ('QUICK_START.md', '.'),
+            ('app.py',                      '.'),
+            ('analyzer.py',                '.'),
+            ('QUICK_START.md',             '.'),
+            ('pathogenicity_criteria.md',  '.'),
             # Data files required by the app
             ('data',        'data'),
             ('misc',       'misc'),
