@@ -515,7 +515,7 @@ with tab_analyze:
                     paper_bgcolor="rgba(0,0,0,0)",
                     margin=dict(t=40, l=50, r=50, b=50),
                 )
-                st.plotly_chart(fig_matrix, use_container_width=True)
+                st.plotly_chart(fig_matrix, width="stretch")
 
             st.divider()
             st.subheader("Full Analysis Details:")
