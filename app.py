@@ -4,7 +4,6 @@ Streamlit Web Application
 """
 
 import streamlit as st
-
 import pandas as pd
 import time
 import plotly.graph_objects as go
@@ -20,6 +19,7 @@ from analyzer import (
     align_sequences_mafft,
     find_closest_neighbours,
     write_temp_fasta,
+    SequenceSimilarity,
 )
 import os
 import pydeck as pdk
@@ -195,8 +195,6 @@ with tab_analyze:
     with col_content:
         st.subheader("Input Sequence")
 
-        input_tab1, input_tab2 = st.tabs(["Paste FASTA", "Upload File"])
-
         input_fasta = None
 
         def clear_input():
@@ -205,39 +203,42 @@ with tab_analyze:
             st.session_state.pop("all_results", None)  # clear results
             st.session_state.pop("trees", None)  # clear cached trees
 
-        # Input sous forme de texte
-        with input_tab1:
-            input_fasta = st.text_area(
-                "Paste your Newcastle Disease F gene sequence in FASTA format:",
-                height=200,
-                placeholder=">your_sequence_name\nATGGGCTCCAGATCCTCTAC...",
-                help="Should be a complete F gene sequence (~1662 bp)",
-                key="fasta_input_area",
-            )
+        with st.form("analyze_form", border=False):
+            input_tab1, input_tab2 = st.tabs(["Paste FASTA", "Upload File"])
 
-        # Input via upload de fichier
-        with input_tab2:
-            uploaded_file = st.file_uploader(  # fichier ouvert en mode binaire.
-                "Or upload a FASTA file", type=["fasta", "fas", "fa", "txt"]
-            )
-            if uploaded_file:
-                input_fasta = uploaded_file.read().decode(
-                    "utf-8"
-                )  # transforme le fichier uploadé (bytes) en texte
+            # Input sous forme de texte
+            with input_tab1:
+                input_fasta = st.text_area(
+                    "Paste your Newcastle Disease F gene sequence in FASTA format:",
+                    height=200,
+                    placeholder=">your_sequence_name\nATGGGCTCCAGATCCTCTAC...",
+                    help="Should be a complete F gene sequence (~1662 bp)",
+                    key="fasta_input_area",
+                )
 
-        # bouton d'analyse
-        col_btn1, col_btn2 = st.columns([0.7, 0.3])
-        with col_btn1:
-            analyze_button = st.button(
-                "Analyze Sequences", type="primary", width="stretch"
-            )
-        # bouton de reset
-        with col_btn2:
-            st.button(
-                "Clear Input",
-                width="stretch",
-                on_click=clear_input,
-            )
+            # Input via upload de fichier
+            with input_tab2:
+                uploaded_file = st.file_uploader(  # fichier ouvert en mode binaire.
+                    "Or upload a FASTA file", type=["fasta", "fas", "fa", "txt"]
+                )
+                if uploaded_file:
+                    input_fasta = uploaded_file.read().decode(
+                        "utf-8"
+                    )  # transforme le fichier uploadé (bytes) en texte
+
+            # bouton d'analyse
+            col_btn1, col_btn2 = st.columns([0.7, 0.3])
+            with col_btn1:
+                analyze_button = st.form_submit_button(
+                    "Analyze Sequences", type="primary", width="stretch"
+                )
+            # bouton de reset
+            with col_btn2:
+                st.form_submit_button(
+                    "Clear Input",
+                    width="stretch",
+                    on_click=clear_input,
+                )
 
         if analyze_button:
             if not input_fasta or input_fasta.strip() == "":
@@ -468,7 +469,54 @@ with tab_analyze:
                             "Could not analyze cleavage site. Sequence may be incomplete."
                         )
 
-            # Exportation des résultats dans un fichier .csv
+            # Matrice de similitude
+            if len(all_sequences) > 1:
+                st.divider()
+                st.subheader("Input Sequences Comparison Matrix")
+
+                seq_headers_short = list(all_sequences.keys())
+                seq_headers_full = list(all_sequences.keys())
+                matrix = []
+
+                for header1, seq1 in all_sequences.items():
+                    row = []
+                    for header2, seq2 in all_sequences.items():
+                        similarity = SequenceSimilarity.pairwise_similarity(seq1, seq2)
+                        row.append(similarity)
+                    matrix.append(row)
+
+                hover_text = [
+                    [
+                        f"{seq_headers_full[i]}<br>{seq_headers_full[j]}<br>Similarity: {matrix[i][j]:.1f}%"
+                        for j in range(len(seq_headers_full))
+                    ]
+                    for i in range(len(seq_headers_full))
+                ]
+
+                fig_matrix = go.Figure(
+                    data=go.Heatmap(
+                        z=matrix,
+                        x=[h[:10] for h in seq_headers_short],
+                        y=[h[:10] for h in seq_headers_short],
+                        colorscale="RdYlGn_r",
+                        zmid=85,
+                        text=[[f"{val:.1f}%" for val in row] for row in matrix],
+                        texttemplate="%{text}",
+                        textfont={"size": 10},
+                        colorbar=dict(title="Similarity %"),
+                        hovertext=hover_text,
+                        hovertemplate="%{hovertext}<extra></extra>",
+                    )
+                )
+                fig_matrix.update_layout(
+                    height=730,
+                    width=450,
+                    plot_bgcolor="rgba(0,0,0,0)",
+                    paper_bgcolor="rgba(0,0,0,0)",
+                    margin=dict(t=40, l=50, r=50, b=50),
+                )
+                st.plotly_chart(fig_matrix, use_container_width=True)
+
             st.divider()
             st.subheader("Full Analysis Details:")
 

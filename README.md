@@ -17,7 +17,6 @@ Download `NDVGenotyper_Windows.zip`, unzip, and double-click `NDVGenotyper.exe` 
 
 ```bash
 sudo apt install mafft fasttree
-pip install -r requirements.txt
 ```
 
 Then run:
