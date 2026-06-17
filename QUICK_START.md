@@ -170,7 +170,7 @@ https://doi.org/10.1016/j.meegid.2019.103917
 
 ---
 
-**Last Updated:** June 11, 2026
+**Last Updated:** June 17, 2026
 
 **Source:** https://github.com/Soupirr/NDV-genotyper
 

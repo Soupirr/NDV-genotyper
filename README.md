@@ -2,6 +2,7 @@
 
 A Streamlit web application for Newcastle Disease Virus F gene genotyping.
 
+---
 
 ## Download
 

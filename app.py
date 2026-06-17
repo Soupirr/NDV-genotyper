@@ -7,6 +7,7 @@ import streamlit as st
 import pandas as pd
 import time
 import plotly.graph_objects as go
+import plotly.colors
 from analyzer import (
     FASTAParser,
     analyze_newcastle_sequence,
@@ -31,6 +32,30 @@ if platform.system() == "Windows":
 DATA_FOLDER = os.path.join(os.path.dirname(__file__), "data")
 SEQ_FOLDER = os.path.join(DATA_FOLDER, "sequences")
 LOCATION_FOLDER = os.path.join(DATA_FOLDER, "locations")
+
+# palette importé depuis ColorBrewer (Spectral 11 + Set1/Dark2 extensions)
+PALETTE = [
+    "#9e0142",
+    "#d53e4f",
+    "#f46d43",
+    "#fdae61",
+    "#fee08b",
+    "#ffffbf",
+    "#e6f598",
+    "#abdda4",
+    "#66c2a5",
+    "#3288bd",
+    "#5e4fa2",
+    "#e41a1c",
+    "#377eb8",
+    "#4daf4a",
+    "#984ea3",
+    "#ff7f00",
+    "#a65628",
+    "#f781bf",
+    "#b15928",
+    "#cab2d6",
+]
 
 # Page configuration
 st.set_page_config(
@@ -82,6 +107,9 @@ st.markdown(
     }
     .stProgress > div > div > div > div {
         background-color: #00aebc;  /* red */
+    }
+    [data-testid="stSelectboxVirtualDropdownEmpty"] {
+        display: none !important;
     }
 """,
     unsafe_allow_html=True,
@@ -704,7 +732,7 @@ with tab_tree:
                 # les paramètres du graph
                 fig.update_layout(
                     title=dict(
-                        text=f"{header}",
+                        text=f"{header[:66]}",
                         font=dict(size=24, color="white"),
                         x=0,
                         xanchor="left",
@@ -768,6 +796,10 @@ with tab_map:
         return df_china, df_us, df_world, df_russia
 
     df_china, df_us, df_world, df_russia = load_locations_database()
+
+    # définition des continents pour les stats
+    df_continent = pd.read_csv(os.path.join(LOCATION_FOLDER, "continent_map.csv"))
+    CONTINENT_MAP = dict(zip(df_continent["country"], df_continent["continent"]))
 
     # définition des centroïdes des gros pays
     CENTROIDS = {
@@ -882,6 +914,10 @@ with tab_map:
     # Appliquer les filtres
     df_filtered = df_map_clean[df_map_clean["genotype"].isin(selected_genotypes)]
 
+    df_report = df_filtered.copy()
+    df_report["country"] = df_report["label"].apply(lambda x: x.split(",")[-1].strip())
+    df_report["continent"] = df_report["country"].map(CONTINENT_MAP).fillna("Unknown")
+
     df_agg = (
         df_filtered.groupby(["lat", "lon", "label"]).size().reset_index(name="count")
     )
@@ -929,6 +965,177 @@ with tab_map:
             )
         )
 
+    # le rapport
+    if not df_filtered.empty:
+        with st.expander("Genotype Distribution Report", expanded=True):
+            # résumé des valeurs
+            col1, col2, col3, col4 = st.columns(4)
+            col1.metric("Sequences shown", len(df_report))
+            col2.metric("Genotypes", df_report["genotype"].nunique())
+            col3.metric("Countries", df_report["country"].nunique())
+            col4.metric("Continents", df_report["continent"].nunique())
+
+            st.divider()
+
+            # onglets
+            tab_world, tab_continent, tab_country = st.tabs(
+                ["World", "By Continent", "By Country"]
+            )
+
+            # l'onglet du monde
+            with tab_world:
+                geno_counts = (
+                    df_report.groupby("genotype").size().reset_index(name="count")
+                )
+                _colorscale = [
+                    [i / (len(PALETTE) - 1), c] for i, c in enumerate(PALETTE)
+                ]
+                n = len(geno_counts)
+                _positions = [i / max(n - 1, 1) for i in range(n)]
+                world_colors = plotly.colors.sample_colorscale(_colorscale, _positions)
+
+                col_bar, col_pie = st.columns([2, 1])
+
+                with col_bar:
+                    fig_bar = go.Figure(
+                        go.Bar(
+                            x=geno_counts["genotype"],
+                            y=geno_counts["count"],
+                            marker=dict(color=world_colors),
+                            text=geno_counts["count"],
+                            textposition="inside",
+                        )
+                    )
+                    fig_bar.update_layout(
+                        xaxis_title="Genotype",
+                        yaxis_title="Sequences",
+                        height=350,
+                        margin=dict(l=0, r=0, t=20, b=0),
+                        plot_bgcolor="rgba(0,0,0,0)",
+                        paper_bgcolor="rgba(0,0,0,0)",
+                    )
+                    st.plotly_chart(fig_bar, width="stretch")
+
+                with col_pie:
+                    fig_pie = go.Figure(
+                        go.Pie(
+                            labels=geno_counts["genotype"],
+                            values=geno_counts["count"],
+                            hole=0.4,
+                            marker=dict(colors=world_colors),
+                            textinfo="label+percent",
+                            textposition="inside",
+                            textfont=dict(color="white"),
+                        )
+                    )
+                    fig_pie.update_layout(
+                        height=350,
+                        margin=dict(l=0, r=0, t=20, b=0),
+                        paper_bgcolor="rgba(0,0,0,0)",
+                        font=dict(color="white"),
+                        showlegend=False,
+                    )
+                    st.plotly_chart(fig_pie, width="stretch")
+
+            # onglet par continent
+            with tab_continent:
+                cont_geno = (
+                    df_report.groupby(["continent", "genotype"])
+                    .size()
+                    .reset_index(name="count")
+                )
+
+                all_genotypes = sorted(cont_geno["genotype"].unique())
+                geno_color = {
+                    g: PALETTE[i % len(PALETTE)] for i, g in enumerate(all_genotypes)
+                }
+
+                for continent in sorted(cont_geno["continent"].unique()):
+                    df_c = cont_geno[cont_geno["continent"] == continent].copy()
+                    df_c["pct"] = (df_c["count"] / df_c["count"].sum() * 100).round(1)
+                    st.subheader(continent)
+                    col_chart, col_stats = st.columns([3, 1])
+
+                    with col_chart:
+                        fig_cont = go.Figure(
+                            go.Bar(
+                                x=df_c["genotype"],
+                                y=df_c["count"],
+                                marker=dict(
+                                    color=[geno_color[g] for g in df_c["genotype"]],
+                                ),
+                                text=df_c["count"],
+                                textposition="inside",
+                            )
+                        )
+                        fig_cont.update_layout(
+                            xaxis_title="Genotype",
+                            yaxis_title="Sequences",
+                            height=300,
+                            margin=dict(l=0, r=0, t=10, b=0),
+                            plot_bgcolor="rgba(0,0,0,0)",
+                            paper_bgcolor="rgba(0,0,0,0)",
+                        )
+                        st.plotly_chart(fig_cont, width="stretch")
+
+                    with col_stats:
+                        st.dataframe(
+                            df_c[["genotype", "count", "pct"]]
+                            .rename(
+                                columns={
+                                    "genotype": "Genotype",
+                                    "count": "Sequences",
+                                    "pct": "%",
+                                }
+                            )
+                            .sort_values("%", ascending=False),
+                            hide_index=True,
+                            width="stretch",
+                            height=300,
+                        )
+
+                    st.divider()
+
+            # onglet par pays
+            with tab_country:
+                selected_continent = st.selectbox(
+                    "Select a continent",
+                    sorted(df_report["continent"].unique()),
+                )
+                df_country = df_report[df_report["continent"] == selected_continent]
+                country_geno = (
+                    df_country.groupby(["country", "genotype"])
+                    .size()
+                    .reset_index(name="count")
+                )
+
+                fig_country = go.Figure()
+                for geno in country_geno["genotype"].unique():
+                    df_g = country_geno[country_geno["genotype"] == geno]
+                    fig_country.add_trace(
+                        go.Bar(
+                            name=geno,
+                            x=df_g["country"],
+                            y=df_g["count"],
+                            hovertemplate="<b>%{x}</b><br>Genotype: %{fullData.name}<br>Sequences: %{y}<extra></extra>",
+                        )
+                    )
+                fig_country.update_layout(
+                    barmode="stack",
+                    xaxis_title="Country",
+                    yaxis_title="Sequences",
+                    height=400,
+                    margin=dict(l=0, r=0, t=20, b=0),
+                    plot_bgcolor="rgba(0,0,0,0)",
+                    paper_bgcolor="rgba(0,0,0,0)",
+                    xaxis_tickangle=-45,
+                    hoverlabel=dict(
+                        bgcolor="#0c1a24",
+                        font_color="white",
+                        bordercolor="rgba(255,255,255,0.2)",
+                    ),
+                )
+                st.plotly_chart(fig_country, width="stretch")
 
 # ============================================================================
 # TAB 4: Help
@@ -942,7 +1149,7 @@ with help_tab:
     st.divider()
 
     info_tab, path_tab, stat_tab = st.tabs(
-        ["Informations", "Pathogénicité", "Statistics"]
+        ["Informations", "Pathogenicity", "Statistics"]
     )
 
     with info_tab:
@@ -1153,24 +1360,7 @@ with help_tab:
             ]
             df_hosts = pd.DataFrame(host_items, columns=["Host", "Sequences"])
 
-            # palette importé depuis ColorBrewer
-            PALETTE = [
-                "#0099cc",
-                "#00c9a7",
-                "#f0a500",
-                "#e05c5c",
-                "#7b68ee",
-                "#20b2aa",
-                "#ff7f50",
-                "#9acd32",
-                "#ba55d3",
-                "#4682b4",
-                "#cd853f",
-                "#5f9ea0",
-                "#d2691e",
-                "#6495ed",
-                "#dc143c",
-            ]
+            # PALETTE définie en haut du fichier (ColorBrewer)
             pie_colors = []
             palette_i = 0
             for host in df_hosts["Host"]:
