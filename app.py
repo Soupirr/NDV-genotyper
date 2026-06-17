@@ -312,6 +312,7 @@ with tab_analyze:
 
         if "all_results" in st.session_state and st.session_state["all_results"]:
             all_results = st.session_state["all_results"]
+            all_sequences = st.session_state["all_sequences"]
             method = st.session_state.get("method", "hamming")
             elapsed_time = st.session_state.get("elapsed_time", 0)
 
