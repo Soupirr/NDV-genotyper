@@ -350,7 +350,7 @@ class CleavageSiteAnalyzer:
         # Cherche d'abord les motifs virulents,
         for motif, category in CleavageSiteAnalyzer.VIRULENT_MOTIFS.items():
             if motif in cleavage_region_prot:
-                result["pathogenicity"] = "Likely Virulent"
+                result["pathogenicity"] = "Virulent"
                 result["motif_type"] = motif
                 result["motif_category"] = category
                 result["confidence"] = "High"
@@ -359,7 +359,7 @@ class CleavageSiteAnalyzer:
         # virulent +1
         for motif, category in CleavageSiteAnalyzer.VIRULENT_MOTIFS.items():
             if motif in cleavage_region_prot_plus_one:
-                result_plus_one["pathogenicity"] = "Likely Virulent"
+                result_plus_one["pathogenicity"] = "Virulent"
                 result_plus_one["motif_type"] = motif
                 result_plus_one["motif_category"] = category
                 result_plus_one["confidence"] = "High"
@@ -368,7 +368,7 @@ class CleavageSiteAnalyzer:
         # virulent -1
         for motif, category in CleavageSiteAnalyzer.VIRULENT_MOTIFS.items():
             if motif in cleavage_region_prot_minus_one:
-                result_minus_one["pathogenicity"] = "Likely Virulent"
+                result_minus_one["pathogenicity"] = "Virulent"
                 result_minus_one["motif_type"] = motif
                 result_minus_one["motif_category"] = category
                 result_minus_one["confidence"] = "High"
@@ -377,7 +377,7 @@ class CleavageSiteAnalyzer:
         # puis les avirulents main
         for motif, category in CleavageSiteAnalyzer.AVIRULENT_MOTIFS.items():
             if motif in cleavage_region_prot:
-                result["pathogenicity"] = "Likely Low-virulence"
+                result["pathogenicity"] = "Low-virulence"
                 result["motif_type"] = motif
                 result["motif_category"] = category
                 result["confidence"] = "High"
@@ -386,7 +386,7 @@ class CleavageSiteAnalyzer:
         # puis les avirulents +1
         for motif, category in CleavageSiteAnalyzer.AVIRULENT_MOTIFS.items():
             if motif in cleavage_region_prot_plus_one:
-                result_plus_one["pathogenicity"] = "Likely Low-virulence"
+                result_plus_one["pathogenicity"] = "Low-virulence"
                 result_plus_one["motif_type"] = motif
                 result_plus_one["motif_category"] = category
                 result_plus_one["confidence"] = "High"
@@ -395,7 +395,7 @@ class CleavageSiteAnalyzer:
         # puis les avirulents -1
         for motif, category in CleavageSiteAnalyzer.AVIRULENT_MOTIFS.items():
             if motif in cleavage_region_prot_minus_one:
-                result_minus_one["pathogenicity"] = "Likely Low-virulence"
+                result_minus_one["pathogenicity"] = "Low-virulence"
                 result_minus_one["motif_type"] = motif
                 result_minus_one["motif_category"] = category
                 result_minus_one["confidence"] = "High"
@@ -562,6 +562,8 @@ def build_tree_fasttree(aln_file):
         **win_flags,
     )
     newick_str = result.stdout
+    if not newick_str or not newick_str.strip():
+        return None
     tree = Phylo.read(io.StringIO(newick_str), "newick")
     return tree
 

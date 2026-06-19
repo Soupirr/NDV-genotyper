@@ -216,8 +216,8 @@ with tab_analyze:
             "Number of Top Matches",
             min_value=1,
             max_value=10,
-            value=3,
-            help="Show this many best-matching genotypes  (Default = 3)",
+            value=5,
+            help="Show this many best-matching genotypes  (Default = 5)",
         )
 
     with col_content:
@@ -230,6 +230,8 @@ with tab_analyze:
             st.session_state.pop("all_sequences", None)  # clear sequences
             st.session_state.pop("all_results", None)  # clear results
             st.session_state.pop("trees", None)  # clear cached trees
+            st.session_state.pop("load_tree", None)
+            st.session_state.pop("n_neighbours", None)
 
         with st.form("analyze_form", border=False):
             input_tab1, input_tab2 = st.tabs(["Paste FASTA", "Upload File"])
@@ -269,6 +271,8 @@ with tab_analyze:
                 )
 
         if analyze_button:
+            st.session_state.pop("load_tree", None)
+            st.session_state.pop("n_neighbours", None)
             if not input_fasta or input_fasta.strip() == "":
                 st.error("Please provide a sequence to analyze")
             elif not input_fasta.strip().startswith(">"):
@@ -384,8 +388,6 @@ with tab_analyze:
                                 "Consider using the Pairwise method for more accurate results."
                             )
 
-                        st.divider()
-
                         # Tableau avec les Top Matches
                         st.write("**Top Matching Genotypes:**")
                         # Transformation en DataFrame
@@ -428,10 +430,7 @@ with tab_analyze:
                         ]
                     )
 
-                    with cadre_1:
-                        # import les résultats de l'analyse
-                        cleavage = results["cleavage_main"]
-
+                    def display_reading_frame(cleavage: dict, frame_label: str):
                         if cleavage["cleavage_region_found"]:
                             motif = (
                                 cleavage["motif_type"]
@@ -484,16 +483,14 @@ with tab_analyze:
                             confidence_path = cleavage["confidence"]
 
                             # Ici on utilise error (et success) pour afficher la zone de texte en rouge ou vert (purement cosmétique)
-                            if "Likely Virulent" in pathogenicity:
-                                st.error(
-                                    f"Likely Virulent (Confidence: {confidence_path})"
-                                )
+                            if "Virulent" in pathogenicity:
+                                st.error(f"Virulent (Confidence: {confidence_path})")
                                 st.write(
                                     "This sequence shows characteristics of a virulent strain with polybasic cleavage site (≥3 basic residues at positions 113-116 + F at position 117)."
                                 )
-                            elif "Likely Low-virulence" in pathogenicity:
+                            elif "Low-virulence" in pathogenicity:
                                 st.success(
-                                    f"Likely Low-virulence (Confidence: {confidence_path})"
+                                    f"Low-virulence (Confidence: {confidence_path})"
                                 )
                                 st.write(
                                     "This sequence shows characteristics of a low-virulence strain with monobasic or L117 cleavage site."
@@ -511,179 +508,16 @@ with tab_analyze:
                                 "Could not analyze cleavage site. Sequence may be incomplete."
                             )
 
+                    with cadre_1:
+                        display_reading_frame(results["cleavage_main"], "Main")
                     with cadre_2:
-                        # import les résultats de l'analyse
-                        cleavage_plus_one = results["cleavage_plus_one"]
-
-                        if cleavage_plus_one["cleavage_region_found"]:
-                            motif = (
-                                cleavage_plus_one["motif_type"]
-                                if cleavage_plus_one["motif_type"]
-                                and len(cleavage_plus_one["motif_type"]) == 6
-                                else cleavage_plus_one["cleavage_protein"][:8]
-                            )
-                            protein_plus_one = cleavage_plus_one["cleavage_protein"]
-
-                            col1, col2, col3 = st.columns([2, 1, 1])
-
-                            with col1:
-                                st.write("**Cleavage Region (protein):**")
-                                if (
-                                    motif
-                                    and len(motif) == 6
-                                    and motif in protein_plus_one
-                                ):
-                                    idx = protein_plus_one.index(motif)
-                                    before = protein_plus_one[:idx]
-                                    after = protein_plus_one[idx + len(motif) :]
-                                    color = (
-                                        "#FF4444"
-                                        if "Virulent" in cleavage_plus_one["pathogenicity"]
-                                        else "#2ECC71"
-                                    )
-                                    st.markdown(
-                                        f"<div style='font-size:20px; text-align:center; font-family:monospace; background-color:#0e1117; padding:8px; border-radius:4px; border:1px solid rgba(255,255,255,0.2);'>{before}<span style='color:{color}'>{motif}</span>{after}</div>",
-                                        unsafe_allow_html=True,
-                                    )
-                                else:
-                                    # si pas de motifs trouvés
-                                    st.markdown(
-                                        f"<div style='font-size:20px; text-align:center; font-family:monospace; background-color:#0e1117; padding:8px; border-radius:4px; border:1px solid rgba(255,255,255,0.2); color:#868d2f;'>{protein_plus_one}</div>",
-                                        unsafe_allow_html=True,
-                                    )
-                            with col2:
-                                st.write("**Motif Found:**")
-                                if (
-                                    cleavage_plus_one["motif_type"]
-                                    and len(cleavage_plus_one["motif_type"]) == 6
-                                ):
-                                    st.code(cleavage_plus_one["motif_type"], language="text")
-                                else:
-                                    st.code("Not found", language="text")
-                            with col3:
-                                st.write("**Motif Category:**")
-                                st.code(
-                                    f"{cleavage_plus_one['motif_category'] or 'Unknown'}",
-                                    language="text",
-                                )
-
-                            pathogenicity = cleavage_plus_one["pathogenicity"]
-                            confidence_path = cleavage_plus_one["confidence"]
-
-                            # Ici on utilise error (et success) pour afficher la zone de texte en rouge ou vert (purement cosmétique)
-                            if "Likely Virulent" in pathogenicity:
-                                st.error(
-                                    f"Likely Virulent (Confidence: {confidence_path})"
-                                )
-                                st.write(
-                                    "This sequence shows characteristics of a virulent strain with polybasic cleavage site (≥3 basic residues at positions 113-116 + F at position 117)."
-                                )
-                            elif "Likely Low-virulence" in pathogenicity:
-                                st.success(
-                                    f"Likely Low-virulence (Confidence: {confidence_path})"
-                                )
-                                st.write(
-                                    "This sequence shows characteristics of a low-virulence strain with monobasic or L117 cleavage site."
-                                )
-                            else:
-                                st.warning(
-                                    f"Undetermined (Confidence: {confidence_path})"
-                                )
-                                st.write(
-                                    "No known cleavage site motif was found in the expected region. "
-                                    "The sequence may be incomplete, contain too many indels, or represent an unusual strain."
-                                )
-                        else:
-                            st.warning(
-                                "Could not analyze cleavage site. Sequence may be incomplete."
-                            )
-
+                        display_reading_frame(results["cleavage_plus_one"], "+1")
                     with cadre_3:
-                        # import les résultats de l'analyse
-                        cleavage_minus_one = results["cleavage_minus_one"]
+                        display_reading_frame(results["cleavage_minus_one"], "-1")
 
-                        if cleavage_minus_one["cleavage_region_found"]:
-                            motif = (
-                                cleavage_minus_one["motif_type"]
-                                if cleavage_minus_one["motif_type"]
-                                and len(cleavage_minus_one["motif_type"]) == 6
-                                else cleavage_minus_one["cleavage_protein"][:8]
-                            )
-                            protein_minus_one = cleavage_minus_one["cleavage_protein"]
-
-                            col1, col2, col3 = st.columns([2, 1, 1])
-
-                            with col1:
-                                st.write("**Cleavage Region (protein):**")
-                                if (
-                                    motif
-                                    and len(motif) == 6
-                                    and motif in protein_minus_one
-                                ):
-                                    idx = protein_minus_one.index(motif)
-                                    before = protein_minus_one[:idx]
-                                    after = protein_minus_one[idx + len(motif) :]
-                                    color = (
-                                        "#FF4444"
-                                        if "Virulent" in cleavage_minus_one["pathogenicity"]
-                                        else "#2ECC71"
-                                    )
-                                    st.markdown(
-                                        f"<div style='font-size:20px; text-align:center; font-family:monospace; background-color:#0e1117; padding:8px; border-radius:4px; border:1px solid rgba(255,255,255,0.2);'>{before}<span style='color:{color}'>{motif}</span>{after}</div>",
-                                        unsafe_allow_html=True,
-                                    )
-                                else:
-                                    # si pas de motifs trouvés
-                                    st.markdown(
-                                        f"<div style='font-size:20px; text-align:center; font-family:monospace; background-color:#0e1117; padding:8px; border-radius:4px; border:1px solid rgba(255,255,255,0.2); color:#868d2f;'>{protein_minus_one}</div>",
-                                        unsafe_allow_html=True,
-                                    )
-                            with col2:
-                                st.write("**Motif Found:**")
-                                if (
-                                    cleavage_minus_one["motif_type"]
-                                    and len(cleavage_minus_one["motif_type"]) == 6
-                                ):
-                                    st.code(cleavage_minus_one["motif_type"], language="text")
-                                else:
-                                    st.code("Not found", language="text")
-                            with col3:
-                                st.write("**Motif Category:**")
-                                st.code(
-                                    f"{cleavage_minus_one['motif_category'] or 'Unknown'}",
-                                    language="text",
-                                )
-
-                            pathogenicity = cleavage_minus_one["pathogenicity"]
-                            confidence_path = cleavage_minus_one["confidence"]
-
-                            # Ici on utilise error (et success) pour afficher la zone de texte en rouge ou vert (purement cosmétique)
-                            if "Likely Virulent" in pathogenicity:
-                                st.error(
-                                    f"Likely Virulent (Confidence: {confidence_path})"
-                                )
-                                st.write(
-                                    "This sequence shows characteristics of a virulent strain with polybasic cleavage site (≥3 basic residues at positions 113-116 + F at position 117)."
-                                )
-                            elif "Likely Low-virulence" in pathogenicity:
-                                st.success(
-                                    f"Likely Low-virulence (Confidence: {confidence_path})"
-                                )
-                                st.write(
-                                    "This sequence shows characteristics of a low-virulence strain with monobasic or L117 cleavage site."
-                                )
-                            else:
-                                st.warning(
-                                    f"Undetermined (Confidence: {confidence_path})"
-                                )
-                                st.write(
-                                    "No known cleavage site motif was found in the expected region. "
-                                    "The sequence may be incomplete, contain too many indels, or represent an unusual strain."
-                                )
-                        else:
-                            st.warning(
-                                "Could not analyze cleavage site. Sequence may be incomplete."
-                            )
+                    st.caption(
+                        "Pathogenicity prediction is based on cleavage site motif matching (Wang et al., 2017) and should be interpreted as indicative only. Results must be validated by biological assays before any clinical or regulatory conclusion."
+                    )
 
             # Matrice de similitude
             if len(all_sequences) > 1:
@@ -716,7 +550,7 @@ with tab_analyze:
                         y=[h[:10] for h in seq_headers_short],
                         colorscale="RdYlGn_r",
                         zmid=85,
-                        text=[[f"{val:.1f}%" for val in row] for row in matrix],
+                        text=[[f"{val:.2f}%" for val in row] for row in matrix],
                         texttemplate="%{text}",
                         textfont={"size": 10},
                         colorbar=dict(title="Similarity %"),
@@ -739,19 +573,38 @@ with tab_analyze:
             export_rows = []  # Tableau de fin
             for results in all_results:
                 matches = results["genotype_matches"]
-                cleavage = results["cleavage_analysis"]
+                frames = [
+                    (results["cleavage_main"], "Main"),
+                    (results["cleavage_plus_one"], "+1"),
+                    (results["cleavage_minus_one"], "-1"),
+                ]
+                best_cleavage = None
+                best_frame_label = "N/A"
+
+                for cleavage, label in frames:
+                    if cleavage["pathogenicity"] != "Undetermined":
+                        best_cleavage = cleavage
+                        best_frame_label = label
+                        break
+
                 export_rows.append(
                     {
-                        "Input Sequence": results["input_header"],
-                        "Sequence Length": results["sequence_length"],
+                        "Header": results["input_header"],
+                        "Length": results["sequence_length"],
                         "Class": get_class(matches[0][0]) if matches else "N/A",
                         "Best Genotype": matches[0][0] if matches else "N/A",
                         "Similarity %": matches[0][1] if matches else "N/A",
-                        "Pathogenicity": cleavage["pathogenicity"]
-                        if cleavage["cleavage_region_found"]
+                        "Pathogenicity": best_cleavage["pathogenicity"]
+                        if best_cleavage
+                        else "Undetermined",
+                        "Cleavage Motif": f"{best_cleavage['motif_type']}"
+                        if best_cleavage
                         else "N/A",
-                        "Motif": f"{cleavage['motif_type']} ({cleavage['motif_category']})"
-                        if cleavage["cleavage_region_found"]
+                        "Motif Class": f"{best_cleavage['motif_category']}"
+                        if best_cleavage
+                        else "N/A",
+                        "Reading Frame": best_frame_label
+                        if best_frame_label
                         else "N/A",
                     }
                 )
@@ -843,6 +696,23 @@ with tab_tree:
 
     if "all_sequences" not in st.session_state or "all_results" not in st.session_state:
         st.info("Run an analysis first to display the phylogenetic tree.")
+    elif "load_tree" not in st.session_state:
+        col_slider_tree, col_button_tree = st.columns([3, 1])
+        with col_slider_tree:
+            n_neighbours = st.slider(
+                "Number of Neighbours",
+                min_value=5,
+                max_value=100,
+                value=20,
+                help="Number of closest reference sequences used to build the phylogenetic tree (default: 20)",
+            )
+        with col_button_tree:
+            st.write("")  # petit espace pour aligner verticalement avec le slider
+            if st.button("Create Trees", type="primary"):
+                st.session_state["load_tree"] = True
+                st.session_state["n_neighbours"] = n_neighbours
+                st.rerun()
+
     else:
         all_sequences = st.session_state["all_sequences"]
 
@@ -854,7 +724,9 @@ with tab_tree:
             if header not in st.session_state["trees"]:
                 with st.spinner(f"Building tree for {header[:40]}..."):
                     # trouve les 20 séquences les plus proche
-                    neighbours = find_closest_neighbours(sequence, references, n=20)
+                    neighbours = find_closest_neighbours(
+                        sequence, references, n=st.session_state["n_neighbours"]
+                    )
                     # écrit un fasta temporaire pour les stocker
                     tmp_dir = os.path.join(DATA_FOLDER, "tmp")
                     os.makedirs(tmp_dir, exist_ok=True)
@@ -864,7 +736,13 @@ with tab_tree:
                     # alignes ces séquences avec mafft
                     align_sequences_mafft(tmp_fasta, tmp_aligned)
                     # les sauvegardes dans session_state
-                    st.session_state["trees"][header] = build_tree_fasttree(tmp_aligned)
+                    tree = build_tree_fasttree(tmp_aligned)
+                    if tree is None:
+                        st.warning(
+                            f"Could not build tree for {header[:40]} — try re-running the analysis."
+                        )
+                    else:
+                        st.session_state["trees"][header] = tree
 
         # Créer un onglet par séquence analysé
         tree_tabs = st.tabs([h[:30] for h in all_sequences.keys()])
@@ -872,6 +750,9 @@ with tab_tree:
         # L'affichage final
         for i, (header, sequence) in enumerate(all_sequences.items()):
             with tree_tabs[i]:
+                if header not in st.session_state["trees"]:
+                    st.warning(f"Tree unavailable for {header[:40]}")
+                    continue
                 tree = st.session_state["trees"][header]
 
                 x_lines, y_lines, x_nodes, y_nodes, labels, n_leaves, max_x = (
@@ -964,6 +845,12 @@ with tab_tree:
                     width="stretch",
                     config={"scrollZoom": True, "displayModeBar": True},
                 )
+
+                if platform.system() == "Windows":
+                    winsound.PlaySound(
+                        "misc/notification.wav",
+                        winsound.SND_FILENAME | winsound.SND_ASYNC,
+                    )
 
 
 # ============================================================================
