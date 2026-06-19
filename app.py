@@ -307,6 +307,7 @@ with tab_analyze:
                         winsound.SND_FILENAME | winsound.SND_ASYNC,
                     )
                 progress_bar.progress(1, text="Analysis complete!")
+                progress_bar.empty()
 
                 # sauvegarde des informations de l'analyse
                 st.session_state["all_results"] = all_results
@@ -704,6 +705,7 @@ with tab_tree:
                 min_value=5,
                 max_value=100,
                 value=20,
+                step=5,
                 help="Number of closest reference sequences used to build the phylogenetic tree (default: 20)",
             )
         with col_button_tree:
