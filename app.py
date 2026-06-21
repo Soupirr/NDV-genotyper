@@ -1621,11 +1621,9 @@ with help_tab:
                 .size()
                 .reset_index(name="Count")
             )
-            motif_counts = (
-                motif_counts[motif_counts["Cleavage Motif"] != "N/A"]
-                .sort_values("Count", ascending=False)
-                .head(7)
-            )
+            motif_counts = motif_counts[
+                motif_counts["Cleavage Motif"] != "N/A"
+            ].sort_values("Count", ascending=False)
             st.dataframe(motif_counts, hide_index=True, width="stretch")
 
         with col_patho_2:
@@ -1652,7 +1650,7 @@ with help_tab:
                 )
             )
             fig_vir_pie.update_layout(
-                height=280,
+                height=350,
                 margin=dict(l=0, r=0, t=0, b=0),
                 paper_bgcolor="rgba(0,0,0,0)",
                 font=dict(color="white"),

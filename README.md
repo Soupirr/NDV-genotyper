@@ -13,7 +13,10 @@
 
 # NDV Genotyper
 
-A Streamlit web application for Newcastle Disease Virus F gene genotyping.
+A Streamlit web/local application for Newcastle Disease Virus F gene genotyping.
+
+
+For more information on how to use the app and how to add sequences to the database, see **QUICK_START.md**.
 
 ---
 
@@ -65,10 +68,6 @@ pyinstaller NDVGenotyper.spec
 ```
 
 Output is in `dist/NDVGenotyper/`. Zip that folder to distribute.
-
----
-
-For more information on how to use the app and how to add sequences to the database, see **QUICK_START.md**.
 
 ---
 
