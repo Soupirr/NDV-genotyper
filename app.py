@@ -1247,7 +1247,7 @@ with tab_map:
                     st.plotly_chart(fig_country, width="stretch")
 
 # ============================================================================
-# TAB 4: Help
+# TAB 4: Stats/Help
 # ============================================================================
 
 with help_tab:
@@ -1263,13 +1263,13 @@ with help_tab:
     ) = st.tabs(["Statistics", "Informations", "Pathogenicity"])
 
     with info_tab:
-        with open("QUICK_START.md", "r", encoding="utf-8") as f:
+        with open("misc/QUICK_START.md", "r", encoding="utf-8") as f:
             informations = f.read()
 
         st.markdown(informations)
 
     with path_tab:
-        with open("PATHOGENICITY_CRITERIA.md", "r", encoding="utf-8") as p:
+        with open("misc/PATHOGENICITY_CRITERIA.md", "r", encoding="utf-8") as p:
             pathogénicité = p.read()
 
         st.markdown(pathogénicité)
