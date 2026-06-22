@@ -5,35 +5,9 @@ import streamlit as st
 import pandas as pd
 import pydeck as pdk
 import plotly.graph_objects as go
+from ndv_genotyper.config import LOCATION_FOLDER, SEQ_FOLDER, PALETTE
 
-# PATHS
-_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-DATA_FOLDER = os.path.join(_ROOT, "data")
-LOCATION_FOLDER = os.path.join(DATA_FOLDER, "locations")
-SEQUENCES_FOLDER = os.path.join(DATA_FOLDER, "sequences")
-
-PALETTE = [
-    "#9e0142",
-    "#d53e4f",
-    "#f46d43",
-    "#fdae61",
-    "#d4a017",
-    "#a8b400",
-    "#5fb300",
-    "#3d9e6b",
-    "#66c2a5",
-    "#3288bd",
-    "#5e4fa2",
-    "#e41a1c",
-    "#377eb8",
-    "#4daf4a",
-    "#984ea3",
-    "#ff7f00",
-    "#a65628",
-    "#f781bf",
-    "#b15928",
-    "#cab2d6",
-]
+# ============================================================================
 
 
 def load_locations_database():
@@ -111,12 +85,15 @@ def parse_header_location(header):
         return CENTROIDS["Russia"][0], CENTROIDS["Russia"][1], "Russia"
 
 
+# ============================================================================
+
+
 @st.cache_resource
 def build_map_dataframe():
     rows = []
-    for file in os.listdir(SEQUENCES_FOLDER):
+    for file in os.listdir(SEQ_FOLDER):
         if file.endswith(".fas"):
-            path = os.path.join(SEQUENCES_FOLDER, file)
+            path = os.path.join(SEQ_FOLDER, file)
             with open(path, "r") as f:
                 for line in f:
                     if line.startswith(">"):
@@ -134,6 +111,9 @@ def build_map_dataframe():
                             }
                         )
     return pd.DataFrame(rows)
+
+
+# ============================================================================
 
 
 def render():

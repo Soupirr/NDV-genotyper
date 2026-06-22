@@ -10,12 +10,9 @@ from ndv_genotyper.analyzer import (
     build_tree_fasttree,
     get_color,
 )
+from ndv_genotyper.config import DATA_FOLDER
 
-_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-DATA_FOLDER = os.path.join(_ROOT, "data")
-
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
+# ============================================================================
 
 
 def tree_to_plotly(tree):
@@ -93,8 +90,7 @@ def tree_to_plotly(tree):
     return x_lines, y_lines, x_nodes, y_nodes, labels, counter[0], max_x
 
 
-# --------------------------------------------------------------------------------
-# --------------------------------------------------------------------------------
+# ============================================================================
 
 
 def render(references):

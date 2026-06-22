@@ -1,4 +1,4 @@
-# Newcastle Disease Virus - Pathogenicity Criteria
+# NDV - Pathogenicity Criteria
 
 Based on: **Dimitrov et al. (2019)** and **Wang et al. (2017)**
 
