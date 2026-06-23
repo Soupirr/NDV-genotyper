@@ -164,7 +164,7 @@ def draw_tree(tree, title, multi_query=False):
             showticklabels=False,
             fixedrange=False,
         ),
-        plot_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="#060d14",
         paper_bgcolor="rgba(0,0,0,0)",
         shapes=[
             dict(

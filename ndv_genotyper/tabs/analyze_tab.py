@@ -209,7 +209,7 @@ def render():
         all_sequences = st.session_state.get("all_sequences", {})
         method = st.session_state.get("method", "hamming")
         elapsed_time = st.session_state.get("elapsed_time", 0)
-
+        st.write("")
         st.success(f"Analysis of {len(all_results)} sequence(s) completed!")
         st.info(f"Analysis took **{elapsed_time:.2f} seconds**")
 
@@ -445,8 +445,8 @@ def render():
             fig_matrix.update_layout(
                 height=700,
                 width=850,
-                plot_bgcolor="rgba(0,0,0,0)",
-                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="#060d14",
+                paper_bgcolor="#060d14",
                 margin=dict(t=40, l=50, r=50, b=50),
             )
             st.plotly_chart(fig_matrix, width="content")
