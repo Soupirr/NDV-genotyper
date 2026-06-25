@@ -1,14 +1,16 @@
 # Validation Report
 
-**Date:** 22-06-2026
-**Tool:** NDV Genotyper v1.4.1
+**Date:** 22-06-2026 |
+**Tool:** NDV Genotyper v1.4.1 |
 **Author:** Antoine Cazin
 
 ---
 
 ## Overview
 
-This report documents the accuracy evaluation of the NDV F Gene Genotyper against a labeled holdout dataset. The goal was to produce a leakage-free estimate of genotyping performance on sequences the classifier had never seen.
+This report documents the accuracy evaluation of the NDV F Gene Genotyper made in the dev tab (?=dev1) against a labeled holdout dataset. The goal was to produce a leakage-free estimate of genotyping performance on sequences the classifier had never seen.
+
+Result CSV available in the validation folder.
 
 ---
 
