@@ -84,6 +84,8 @@ nomenclature for Newcastle disease virus, https://doi.org/10.1016/j.meegid.2019.
 
 ## Gallery
 
+<br><br>
+
 <img width="700" alt="figtree_example" src="https://github.com/user-attachments/assets/e4b8cc8f-7cb3-46f6-829b-4beeada857a3" />
 
 <br><br>
