@@ -84,10 +84,13 @@ nomenclature for Newcastle disease virus, https://doi.org/10.1016/j.meegid.2019.
 
 ## Gallery
 
-<img width="1130" height="1625" alt="figtree_example" src="https://github.com/user-attachments/assets/e4b8cc8f-7cb3-46f6-829b-4beeada857a3" />
+<img width="900" alt="figtree_example" src="https://github.com/user-attachments/assets/e4b8cc8f-7cb3-46f6-829b-4beeada857a3" />
 
-<img width="684" height="368" alt="Capture d&#39;écran 2026-06-25 101409" src="https://github.com/user-attachments/assets/1f65e62d-9504-4cb6-b958-0e0da67cc254" />
 
-<img width="842" height="473" alt="Capture d&#39;écran 2026-06-25 101518" src="https://github.com/user-attachments/assets/2fca2686-8dfc-4afd-804c-959a5308477f" />
+<img width="900" alt="Capture d&#39;écran 2026-06-25 101409" src="https://github.com/user-attachments/assets/1f65e62d-9504-4cb6-b958-0e0da67cc254" />
 
-<img width="724" height="296" alt="Capture d&#39;écran 2026-06-19 150757" src="https://github.com/user-attachments/assets/b7a9c792-5714-4ee4-bb68-3660d6255980" />
+
+<img width="900" alt="Capture d&#39;écran 2026-06-25 101518" src="https://github.com/user-attachments/assets/2fca2686-8dfc-4afd-804c-959a5308477f" />
+
+
+<img width="900" alt="Capture d&#39;écran 2026-06-19 150757" src="https://github.com/user-attachments/assets/b7a9c792-5714-4ee4-bb68-3660d6255980" />
